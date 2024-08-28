@@ -16,6 +16,15 @@ provider "aws" {
   region = "us-east-1" # Choose your preferred region
 }
 
+# Create an Internet Gateway
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.main_vpc.id
+
+  tags = {
+    Name = "main_igw"
+  }
+}
+
 # Create a VPC
 resource "aws_vpc" "main_vpc" {
   cidr_block = "10.0.0.0/16"
@@ -34,6 +43,26 @@ resource "aws_subnet" "public_subnet_1" {
   tags = {
     Name = "public_subnet_1"
   }
+}
+
+# Create a Route Table
+resource "aws_route_table" "public_route_table" {
+  vpc_id = aws_vpc.main_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+
+  tags = {
+    Name = "public_route_table"
+  }
+}
+
+# Associate the Route Table with the Public Subnet
+resource "aws_route_table_association" "public_subnet_association" {
+  subnet_id      = aws_subnet.public_subnet_1.id
+  route_table_id = aws_route_table.public_route_table.id
 }
 
 # Create a Security Group for EC2 instance
