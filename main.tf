@@ -39,9 +39,20 @@ resource "aws_subnet" "public_subnet_1" {
   vpc_id            = aws_vpc.main_vpc.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-east-1a"
+  map_public_ip_on_launch = true 
 
   tags = {
     Name = "public_subnet_1"
+  }
+}
+resource "aws_subnet" "public_subnet_2" {
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = "us-east-1b"
+  map_public_ip_on_launch = true 
+
+  tags = {
+    Name = "public_subnet_2"
   }
 }
 
@@ -117,13 +128,27 @@ data "aws_ami" "latest_amazon_linux" {
 
 # Launch an EC2 instance
 resource "aws_instance" "web_server" {
-  ami = data.aws_ami.latest_amazon_linux.id
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.public_subnet_1.id
+  ami                    = data.aws_ami.latest_amazon_linux.id
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.public_subnet_1.id
   vpc_security_group_ids = [aws_security_group.web_sg.id] # Associate the security group
+  # User data script to install and configure Nginx
+  user_data = <<-EOF
+              #!/bin/bash
+              sudo yum update -y
+              sudo amazon-linux-extras enable epel
+              sudo yum install epel-release -y
+              sudo yum install nginx -y
+              sudo systemctl start nginx
+              sudo systemctl enable nginx
+              echo "<h1>Hello from Nginx on EC2</h1>" | tee /usr/share/nginx/html/index.html
+              EOF
 
   tags = {
     Name = "web_server"
   }
 }
 
+output "instance_public_ip" {
+  value = aws_instance.web_server.public_ip
+}
