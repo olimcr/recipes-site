@@ -2,6 +2,14 @@
 
 # Specify the provider and version
 terraform {
+  backend "s3" {
+    bucket         = "aws-recipes-site-state"
+    key            = "terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "aws-recipes-site-lock-table"
+    encrypt        = true
+  }
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
