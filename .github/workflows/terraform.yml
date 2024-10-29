@@ -55,6 +55,9 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.0
+      
+      - name: Terraform Init
+        run: terraform init
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
