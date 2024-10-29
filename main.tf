@@ -22,6 +22,11 @@ provider "aws" {
   region = "us-east-1" # Choose your preferred region
 }
 
+data "aws_route53_zone" "main_domain_zone" {
+  name         = "oliverwhitelegg.xyz"
+  private_zone = false
+}
+
 # Create an Internet Gateway
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main_vpc.id
@@ -153,6 +158,14 @@ resource "aws_instance" "web_server" {
   tags = {
     Name = "web_server"
   }
+}
+
+resource "aws_route53_record" "subdomain" {
+  zone_id = data.aws_route53_zone.main_domain_zone.zone_id
+  name    = "cooking"
+  type    = "A"
+  ttl     = "300"
+  records = [aws_instance.web_server.public_ip]
 }
 
 output "instance_public_ip" {
